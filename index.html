@@ -98,8 +98,6 @@
                     Ordenar
                     <select class="px-2 py-2 focus:border-white/30 rounded-lg outline-none text-white text-sm vidro" x-model="ordem">
                         <option value="recentes">Mais recentes</option>
-                        <option value="menor">Menor preço</option>
-                        <option value="maior">Maior preço</option>
                         <option value="nome">Nome (A–Z)</option>
                     </select>
                 </label>
@@ -122,10 +120,7 @@
                     <div class="flex flex-col flex-1 gap-1 p-4">
                         <p class="font-semibold text-blue-300/80 text-xs uppercase tracking-wide" x-text="p.solado ? `${p.marca} · ${p.solado}` : p.marca"></p>
                         <h2 class="font-medium text-white/90 text-sm line-clamp-2 leading-snug" x-text="p.titulo"></h2>
-                        <div class="flex justify-between items-end mt-auto pt-2">
-                            <span class="font-bold" :class="p.preco == null ? 'text-sm text-white/40' : 'text-base text-white'" x-text="formatarPreco(p.preco)"></span>
-                            <span class="text-white/40 text-xs" x-show="p.tamanhos" x-text="p.tamanhos && `Tam. ${p.tamanhos.de}–${p.tamanhos.ate}`"></span>
-                        </div>
+                        <p class="mt-auto pt-2 text-white/40 text-xs" x-show="p.tamanhos" x-text="p.tamanhos && `Tam. ${p.tamanhos.de}–${p.tamanhos.ate}`"></p>
                     </div>
                 </a>
             </template>
@@ -196,8 +191,6 @@
                     (!this.solado || p.solado === this.solado) &&
                     termos.every((t) => p._busca.includes(t))
                 )
-                if (this.ordem === 'menor') lista.sort((a, b) => (a.preco ?? Infinity) - (b.preco ?? Infinity))
-                if (this.ordem === 'maior') lista.sort((a, b) => (b.preco ?? -1) - (a.preco ?? -1))
                 if (this.ordem === 'nome') lista.sort((a, b) => a.titulo.localeCompare(b.titulo))
                 return lista
             },

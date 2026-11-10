@@ -3,9 +3,8 @@
 // assim a pasta trivela-house/ é autocontida e pode ser publicada no GitHub Pages.
 // A interface das páginas é feita com Alpine.js; aqui ficam só dados e formatação.
 
-// O produtos.json guarda o preço do fornecedor em yuan (CNY); o site mostra em reais.
-// Quantos reais vale 1 yuan (referência de mercado de 05/11/2026: ~R$ 0,82). Atualize quando quiser.
-const COTACAO_CNY_BRL = 0.82;
+// WhatsApp da loja (só dígitos, com DDI 55 e DDD), usado no botão da página do produto.
+const WHATSAPP = '5513991131555';
 
 // Este arquivo fica em trivela-house/src/; os dados ficam em trivela-house/dados/.
 const DADOS = new URL('../dados/', document.currentScript.src);
@@ -60,12 +59,11 @@ function urlProduto(id) {
   return `${URL_PRODUTO.href}?id=${encodeURIComponent(id)}`;
 }
 
-const FORMATO_BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-
-// Recebe o preço em yuan (como vem do produtos.json) e devolve em reais: "R$ 217,30".
-function formatarPreco(precoCny) {
-  if (precoCny == null) return 'Sob consulta';
-  return FORMATO_BRL.format(Number(precoCny) * COTACAO_CNY_BRL);
+// Link do WhatsApp com a mensagem pronta. Vai o link da página junto porque vários produtos
+// têm o mesmo nome (cores diferentes do mesmo modelo).
+function urlWhatsapp(produto, urlPagina) {
+  const texto = `Olá! Tenho interesse na chuteira ${produto.titulo}.\n${urlPagina}`;
+  return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(texto)}`;
 }
 
 // Carrega os produtos que têm fotos, já com os campos interpretados.
