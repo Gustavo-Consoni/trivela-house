@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <title>Catálogo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Encontre sua próxima chuteira">
+    <link rel="stylesheet" href="src/output.css">
+    <script src="src/catalogo.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.17.5/dist/cdn.min.js"></script>
+    <style>
+        html {
+            text-size-adjust: 100%;
+            -webkit-text-size-adjust: 100%;
+            font-size: clamp(12px, 4vw, 16px);
+        }
+        [x-cloak] {
+            display: none !important;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+    </style>
+</head>
+<body class="bg-[#101010] min-h-screen font-sans text-white antialiased" x-data="listagem">
+    <!-- Fundo: blobs azuis desfocados -->
+    <div class="-z-10 fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        <div class="-top-32 -left-32 absolute bg-blue-600/35 blur-[128px] rounded-full size-128 motion-safe:animate-flutuar"></div>
+        <div class="top-1/3 -right-32 absolute bg-sky-500/20 blur-[128px] rounded-full size-128 motion-safe:animate-flutuar [animation-delay:-8s]"></div>
+        <div class="-bottom-32 left-1/4 absolute bg-indigo-600/30 blur-[140px] rounded-full size-128 motion-safe:animate-flutuar [animation-delay:-16s]"></div>
+    </div>
+
+    <header class="top-0 z-20 sticky bg-white/5 backdrop-blur-xl backdrop-saturate-150 border-white/15 border-b">
+        <div class="flex items-center gap-4 mx-auto px-4 sm:px-8 py-4 max-w-7xl">
+            <a class="font-bold text-lg tracking-tight" href="./">Catálogo</a>
+            <label class="relative ml-auto w-full max-w-md">
+                <span class="sr-only">Buscar</span>
+                <svg class="top-1/2 left-2 absolute size-4 text-white/40 -translate-y-1/2 pointer-events-none" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.45 4.39l3.08 3.08a.75.75 0 1 1-1.06 1.06l-3.08-3.08A7 7 0 0 1 2 9Z" clip-rule="evenodd"/>
+                </svg>
+                <input
+                    class="focus:bg-white/10 py-2 pr-4 pl-8 focus:border-white/30 rounded-full outline-none w-full placeholder:text-white/40 text-sm transition vidro"
+                    x-model.debounce.200ms="busca"
+                    type="search"
+                    placeholder="Buscar modelo, marca ou código…"
+                    autocomplete="off"
+                >
+            </label>
+        </div>
+    </header>
+
+    <main class="mx-auto px-4 sm:px-8 py-8 max-w-7xl">
+        <section class="space-y-2 mb-8">
+            <div class="flex flex-wrap items-center gap-2" aria-label="Marcas">
+                <button
+                    class="cursor-pointer chip"
+                    type="button"
+                    :aria-pressed="marca === ''"
+                    @click="marca = ''"
+                >
+                    Todas as marcas
+                </button>
+                <template x-for="m in marcas" :key="m.valor">
+                    <button
+                        class="cursor-pointer chip"
+                        type="button"
+                        :aria-pressed="marca === m.valor"
+                        @click="marca = m.valor"
+                    >
+                        <span x-text="m.valor"></span>
+                        <span class="opacity-50" x-text="m.total"></span>
+                    </button>
+                </template>
+            </div>
+            <div class="flex flex-wrap items-center gap-2" aria-label="Solado">
+                <button
+                    class="cursor-pointer chip"
+                    type="button"
+                    :aria-pressed="solado === ''"
+                    @click="solado = ''"
+                >
+                    Todos os solados
+                </button>
+                <template x-for="s in solados" :key="s.valor">
+                    <button
+                        class="cursor-pointer chip"
+                        type="button"
+                        :aria-pressed="solado === s.valor"
+                        @click="solado = s.valor"
+                        x-text="s.valor"
+                    ></button>
+                </template>
+            </div>
+            <div class="flex flex-wrap justify-between items-center gap-4 pt-1">
+                <p class="text-white/50 text-sm" x-text="carregando ? 'Carregando produtos…' : erro ? '' : `${filtrados.length} produto${filtrados.length === 1 ? '' : 's'}`"></p>
+                <label class="flex items-center gap-2 text-white/60 text-sm">
+                    Ordenar
+                    <select class="px-2 py-2 focus:border-white/30 rounded-lg outline-none text-white text-sm vidro" x-model="ordem">
+                        <option value="recentes">Mais recentes</option>
+                        <option value="menor">Menor preço</option>
+                        <option value="maior">Maior preço</option>
+                        <option value="nome">Nome (A–Z)</option>
+                    </select>
+                </label>
+            </div>
+        </section>
+
+        <div class="gap-2 sm:gap-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <template x-for="p in filtrados" :key="p.id">
+                <a class="group flex flex-col hover:bg-white/10 hover:shadow-2xl hover:shadow-blue-500/10 hover:border-white/30 rounded-2xl overflow-hidden transition hover:-translate-y-0.5 vidro" :href="urlProduto(p.id)">
+                    <div class="relative bg-white/5 aspect-square overflow-hidden">
+                        <img
+                            class="size-full object-cover group-hover:scale-105 transition duration-300"
+                            :src="urlFoto(p.arquivos[0])"
+                            :alt="p.titulo"
+                            loading="lazy"
+                            decoding="async"
+                        >
+                        <span class="right-2 bottom-2 absolute bg-black/60 backdrop-blur px-2 py-0.5 rounded-full font-medium text-white text-xs" x-show="p.arquivos.length > 1" x-text="`${p.arquivos.length} fotos`"></span>
+                    </div>
+                    <div class="flex flex-col flex-1 gap-1 p-4">
+                        <p class="font-semibold text-blue-300/80 text-xs uppercase tracking-wide" x-text="p.solado ? `${p.marca} · ${p.solado}` : p.marca"></p>
+                        <h2 class="font-medium text-white/90 text-sm line-clamp-2 leading-snug" x-text="p.titulo"></h2>
+                        <div class="flex justify-between items-end mt-auto pt-2">
+                            <span class="font-bold" :class="p.preco == null ? 'text-sm text-white/40' : 'text-base text-white'" x-text="formatarPreco(p.preco)"></span>
+                            <span class="text-white/40 text-xs" x-show="p.tamanhos" x-text="p.tamanhos && `Tam. ${p.tamanhos.de}–${p.tamanhos.ate}`"></span>
+                        </div>
+                    </div>
+                </a>
+            </template>
+        </div>
+
+        <div class="mx-auto px-8 py-16 rounded-2xl max-w-md text-white/60 text-center vidro" x-cloak x-show="!carregando && !erro && filtrados.length === 0">
+            <p class="font-medium text-white text-lg">Nenhum produto encontrado</p>
+            <p class="mt-1 text-sm">Tente outra busca ou limpe os filtros.</p>
+            <button class="bg-white hover:bg-white/85 mt-4 px-4 py-2 rounded-full font-medium text-[#101010] text-sm transition cursor-pointer" @click="limpar()">Limpar filtros</button>
+        </div>
+
+        <div class="bg-red-500/10 backdrop-blur-xl backdrop-saturate-150 p-8 border border-red-400/30 rounded-2xl text-red-200 text-sm" x-cloak x-show="erro">
+            <p class="font-semibold" x-text="erro"></p>
+            <p class="mt-2">Abra o site por um servidor local a partir da raiz do projeto: <code class="bg-white/10 px-1 rounded">cd trivela-house && npm run serve</code> e acesse <code class="bg-white/10 px-1 rounded">http://localhost:8080/trivela-house/</code>.</p>
+        </div>
+    </main>
+
+    <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('listagem', () => ({
+
+            produtos: [],
+            carregando: true,
+            erro: '',
+            busca: '',
+            marca: '',
+            solado: '',
+            ordem: 'recentes',
+
+            async init() {
+                // Filtros ficam na URL: ao voltar da página do produto, a listagem reabre igual.
+                const params = new URLSearchParams(location.search)
+                this.busca = params.get('q') || ''
+                this.marca = params.get('marca') || ''
+                this.solado = params.get('solado') || ''
+                this.ordem = params.get('ordem') || 'recentes'
+                for (const campo of ['busca', 'marca', 'solado', 'ordem']) this.$watch(campo, () => this.salvarNaUrl())
+
+                try {
+                    this.produtos = (await carregarProdutos()).map((p) => ({
+                        ...p,
+                        _busca: this.normalizar(`${p.titulo} ${p.marca} ${p.codigo || ''} ${p.id} ${p.nome}`),
+                    }))
+                } catch (e) {
+                    this.erro = e.message
+                } finally {
+                    this.carregando = false
+                }
+            },
+
+            normalizar(texto) {
+                return texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+            },
+
+            salvarNaUrl() {
+                const p = new URLSearchParams()
+                if (this.busca) p.set('q', this.busca)
+                if (this.marca) p.set('marca', this.marca)
+                if (this.solado) p.set('solado', this.solado)
+                if (this.ordem !== 'recentes') p.set('ordem', this.ordem)
+                history.replaceState(null, '', p.toString() ? `?${p}` : location.pathname)
+            },
+
+            get filtrados() {
+                const termos = this.normalizar(this.busca.trim()).split(/\s+/).filter(Boolean)
+                const lista = this.produtos.filter((p) =>
+                    (!this.marca || p.marca === this.marca) &&
+                    (!this.solado || p.solado === this.solado) &&
+                    termos.every((t) => p._busca.includes(t))
+                )
+                if (this.ordem === 'menor') lista.sort((a, b) => (a.preco ?? Infinity) - (b.preco ?? Infinity))
+                if (this.ordem === 'maior') lista.sort((a, b) => (b.preco ?? -1) - (a.preco ?? -1))
+                if (this.ordem === 'nome') lista.sort((a, b) => a.titulo.localeCompare(b.titulo))
+                return lista
+            },
+
+            // [{ valor, total }] ordenado pelos mais frequentes
+            contagem(campo) {
+                const mapa = new Map()
+                this.produtos.forEach((p) => p[campo] && mapa.set(p[campo], (mapa.get(p[campo]) || 0) + 1))
+                return [...mapa].sort((a, b) => b[1] - a[1]).map(([valor, total]) => ({ valor, total }))
+            },
+
+            get marcas() { return this.contagem('marca') },
+            get solados() { return this.contagem('solado') },
+
+            limpar() {
+                this.busca = ''
+                this.marca = ''
+                this.solado = ''
+            },
+
+        }))
+    })
+    </script>
+</body>
+</html>

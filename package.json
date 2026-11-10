@@ -1,0 +1,15 @@
+{
+  "name": "catalogo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Catálogo de produtos gerado a partir da coleta do Yupoo",
+  "scripts": {
+    "build": "tailwindcss -i ./src/input.css -o ./src/output.css --minify",
+    "dev": "tailwindcss -i ./src/input.css -o ./src/output.css --watch",
+    "serve": "python3 -m http.server 8080 --directory .."
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.5",
+    "tailwindcss": "^4.3.5"
+  }
+}
